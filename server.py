@@ -129,7 +129,12 @@ def receive_message(connection, address, username, message_queue):
     print("Can't close connection.")
 
 
-def send_message(message_queue, server_socket): # smth diff server_socket not needed in function
+def send_message(message_queue):
+    """ Rread a message from the queue and send it to a client.
+
+        Args:
+            message_queue (queue): The queue where the received messages are stored.
+    """
     while True:
         username, msg, to_user = message_queue.get()
         found = False
@@ -179,7 +184,7 @@ if __name__ == "__main__":
                 client_list.append((username, conn))
 
                 Thread(target=receive_message, args=(conn, addr, username, message_queue), daemon=True).start()
-                Thread(target=send_message, args=(message_queue, server_socket), daemon=True).start()
+                Thread(target=send_message, args=(message_queue, ), daemon=True).start()
                 conn_cnt += 1
                 print(f"{conn_cnt} connections")
             except socket.timeout:  # Windows (Python >= 3.10: TimeoutError)
