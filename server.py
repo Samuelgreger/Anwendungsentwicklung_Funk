@@ -17,7 +17,7 @@ def get_my_ip():
     return socket.gethostbyname(LOCALHOST) #socket.gethostbyname(socket.gethostname())
 
 
-def check_receved_message(msg):
+def check_received_message(msg):
     if not msg or "stop" in msg.lower():
         return True
     return False
@@ -69,19 +69,30 @@ def receive_message(connection, address, username, message_queue):
         print(f"Listening for {username} ({address[0]}:{address[1]}) ...")
         data_action = connection.recv(2048)
         action_decoded = data_action.decode()
+        if check_received_message(action_decoded):
+            break
         if action_decoded == "y":
             send_client_list(connection, username)
         
-        data_to_user = connection.recv(2048)
-        to_user_decoded = data_to_user.decode()
-        if check_receved_message(to_user_decoded):
-            break
-        data_message = connection.recv(2048)
-        message_decoded = data_message.decode()
-        if check_receved_message(message_decoded):
-            break
+        elif action_decoded == "n":
+            data_to_user = connection.recv(2048)
+            to_user_decoded = data_to_user.decode()
+            if check_received_message(to_user_decoded):
+                break
+            data_message = connection.recv(2048)
+            message_decoded = data_message.decode()
+            if check_received_message(message_decoded):
+                break
 
-        message_queue.put((username, message_decoded, to_user_decoded))
+            message_queue.put((username, message_decoded, to_user_decoded))
+        
+        # else:
+        #     print(f"Unknown action: '{action_decoded}'")
+        #     if check_received_message(action_decoded):
+        #         print("check good")
+        #         break
+        #     print("check failed")
+        #     break
         
     for i in client_list:
         if i[0] == username:

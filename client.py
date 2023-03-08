@@ -49,7 +49,8 @@ def user_options():
     print("====== Minimal Chat System ======")
     print("1: Send message")
     print("2: Check incoming messages")
-    print("ENTER or 3: Quit")
+    print("3: Get active users")
+    print("ENTER or 4: Quit")
     selection = input("Your selection: ")
     return selection
 
@@ -61,8 +62,7 @@ def check_input(msg):
     return False
 
 
-def get_all_messages():
-    all_messages = []
+def get_all_messages(all_messages, users=False):
     client_socket.settimeout(0.5)
     print("Loading ...")
     while True:
@@ -70,29 +70,61 @@ def get_all_messages():
             response = client_socket.recv(2048)
             return_msg = response.decode()
             if return_msg:
-                all_messages.append(return_msg)
+                return_msg_splited = return_msg.split('\n')
+                for m in return_msg_splited:
+                    if m:
+                        all_messages.append(m)
                 continue
             else:
                 break
         except socket.timeout:
             break
 
-    return all_messages
+    # print(f"All: {all_messages}")
+
+    if users:
+        all_users = []
+        for m in all_messages:
+            if not m.startswith("From"):
+                all_users.append(m)
+                all_messages.remove(m)
+                return all_users
+            
+    else:
+        msg = []
+        for m in all_messages:
+            if m.startswith("From"):
+                msg.append(m)
+                all_messages.remove(m)
+        
+        return msg
 
 
 if __name__ == "__main__":
     # Ask for connection
     username = submit_username()
+    all_messages = []
+
     # setup Chatroom and do the talk
     while True:
         user_selection = user_options()
         if user_selection == '1':
-            user_list = input("Do you want the see the aktive Users in the System? (y/n): ")
-            if(user_list == 'y'):
-                client_socket.send(str.encode('y'))
-                response = client_socket.recv(2048)
-                return_user_list = response.decode()
-                print(f"{return_user_list}")
+            # user_list = input("Do you want the see the aktive Users in the System? (y/n): ")
+            # if(user_list == 'y'):
+            #     client_socket.send(str.encode('y'))
+
+            #     messages = get_all_messages(all_messages, True)
+            #     if(messages):
+            #         for m in messages:
+            #             print(f"{m}")
+            #     else:
+            #         print("No Users\n")
+                
+                # response = client_socket.recv(2048)
+                # return_user_list = response.decode()
+                # print(f"{return_user_list}")
+
+            client_socket.send(str.encode('n'))
 
             # Send the user the message should be send to
             to_user = input("Send message to: ")
@@ -109,21 +141,34 @@ if __name__ == "__main__":
                 break
 
         elif user_selection == '2':
-            messages = get_all_messages()
+            messages = get_all_messages(all_messages)
             if(messages):
                 for m in messages:
                     print(f"{m}\n")
             else:
                 print("No Messages\n")
             print(f"No more messages for '{username}'.\n")
-        elif user_selection == '3' or not user_selection:
-            messages = get_all_messages()
+        
+        elif user_selection == '3':
+            # print("get all users in the system")
+            client_socket.send(str.encode('y'))
+
+            messages = get_all_messages(all_messages, True)
+            if(messages):
+                for m in messages:
+                    print(f"{m}\n")
+
+            else:
+                print("No Users\n")
+
+        elif user_selection == '4' or not user_selection:
+            messages = get_all_messages(all_messages)
             if(messages):
                 print("Old messages:")
                 for m in messages:
-                    print(m)
+                    print(f"{m}\n")
             else:
-                print("No Messages\n")
+                print("No Messages.\n")
 
             client_socket.send(str.encode('stop'))
             break
