@@ -1,7 +1,14 @@
+""" In this module, the user can connect to a server with the specified IP and Port.
+    It is Possible to send messages to other users and receive messages from other users.
+    Also, the user can request a list of all users that are connected.
+    The IP address can be specified by the user in the command line at runtime.
+    
+    Authors:
+        Samuel Greger <samuel.greger@student.dhbw-vs.de>
+"""
+
 import socket
 import sys
-from threading import Thread
-from queue import Queue
 
 client_socket = socket.socket()
 LOCALHOST = '127.0.0.1' # '192.168.56.1'
@@ -26,6 +33,11 @@ except socket.error as e:
 
 
 def submit_username():
+    """Ask for username and send it to the server for validation.
+    
+        Returns:
+            str: The username.
+    """
     while True:
         username = input("Choose client ID: ")
         if not username:
@@ -46,6 +58,11 @@ def submit_username():
 
 
 def user_options():
+    """ Show the user the options he can choose from.
+    
+        Returns:
+            str: The user's selection.
+    """
     print("====== Minimal Chat System ======")
     print("1: Send message")
     print("2: Check incoming messages")
@@ -56,6 +73,14 @@ def user_options():
 
 
 def check_input(msg):
+    """ Check if the message is valid.
+    
+        Args:
+            msg (str): The message the user wants to send.
+
+        Returns:
+            bool: True if the message is valid, False otherwise.
+    """
     client_socket.send(str.encode(msg))
     if "stop" in msg.lower():
         return True
@@ -63,6 +88,15 @@ def check_input(msg):
 
 
 def get_all_messages(all_messages, users=False):
+    """ Get all messages from the server.
+
+        Args:  
+            all_messages (list): A list of all messages.
+            users (bool): True if the user wants to get a list of all users, False otherwise.
+
+        Returns:
+            list: A list of all messages or a list of all users.
+    """
     client_socket.settimeout(0.5)
     print("Loading ...")
     while True:
@@ -103,7 +137,7 @@ if __name__ == "__main__":
     username = submit_username()
     all_messages = []
 
-    # setup Chatroom and do the talk
+    # setup Chatroom and handle user input accordingly
     while True:
         user_selection = user_options()
         if user_selection == '1':
@@ -154,7 +188,8 @@ if __name__ == "__main__":
 
             client_socket.send(str.encode('stop'))
             break
-
-    client_socket.close()
+    
+    # close the connection
+    client_socket.close() 
     print("Closing down Session")
     print("Goodbye")

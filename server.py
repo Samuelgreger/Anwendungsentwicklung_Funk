@@ -1,3 +1,10 @@
+""" Server for multithreaded (asynchronous) chat application.
+
+    Authors:
+        Samuel Greger <samuel.greger@student.dhbw-vs.de>
+        Extended the Moodle file from Wolfgang Funk.
+"""
+
 import socket
 import sys
 import platform
@@ -18,12 +25,25 @@ def get_my_ip():
 
 
 def check_received_message(msg):
+    """ Check if the received message is a stop message.
+
+        Args:
+            msg (str): The message a client send.
+
+        Returns:
+            bool: True if the message is a stop message, False otherwise.
+    """
     if not msg or "stop" in msg.lower():
         return True
     return False
 
 
 def send_client_list(conn, username):
+    """ Send a list of all connected clients to the client.
+        
+        Args:
+            conn (socket): The socket of the client.
+    """
     names = []
     for cli in client_list:
         if (cli[0] != username):
@@ -35,6 +55,11 @@ def send_client_list(conn, username):
 
 
 def accept_client():
+    """ Accept a new client and add it to the client list.
+
+        Returns:
+            tuple: The socket, address and username of the new client.
+    """
     conn, addr = server_socket.accept()
 
     while True:
@@ -62,6 +87,14 @@ def accept_client():
 
 
 def receive_message(connection, address, username, message_queue):
+    """ Receive a message from a client and put it in the queue.
+
+        Args:
+            connection (socket): The socket of the client.
+            address (tuple): The address of the client.
+            username (str): The username of the client.
+            message_queue (queue): The queue where the received messages are stored.
+    """
     global conn_cnt
     print(f"{username} at {address[0]}:{address[1]}")
     
