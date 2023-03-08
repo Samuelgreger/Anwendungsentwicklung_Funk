@@ -86,14 +86,6 @@ def receive_message(connection, address, username, message_queue):
 
             message_queue.put((username, message_decoded, to_user_decoded))
         
-        # else:
-        #     print(f"Unknown action: '{action_decoded}'")
-        #     if check_received_message(action_decoded):
-        #         print("check good")
-        #         break
-        #     print("check failed")
-        #     break
-        
     for i in client_list:
         if i[0] == username:
             client_list.remove(i)

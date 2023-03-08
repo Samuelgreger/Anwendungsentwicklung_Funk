@@ -80,8 +80,6 @@ def get_all_messages(all_messages, users=False):
         except socket.timeout:
             break
 
-    # print(f"All: {all_messages}")
-
     if users:
         all_users = []
         for m in all_messages:
@@ -109,21 +107,6 @@ if __name__ == "__main__":
     while True:
         user_selection = user_options()
         if user_selection == '1':
-            # user_list = input("Do you want the see the aktive Users in the System? (y/n): ")
-            # if(user_list == 'y'):
-            #     client_socket.send(str.encode('y'))
-
-            #     messages = get_all_messages(all_messages, True)
-            #     if(messages):
-            #         for m in messages:
-            #             print(f"{m}")
-            #     else:
-            #         print("No Users\n")
-                
-                # response = client_socket.recv(2048)
-                # return_user_list = response.decode()
-                # print(f"{return_user_list}")
-
             client_socket.send(str.encode('n'))
 
             # Send the user the message should be send to
@@ -150,7 +133,6 @@ if __name__ == "__main__":
             print(f"No more messages for '{username}'.\n")
         
         elif user_selection == '3':
-            # print("get all users in the system")
             client_socket.send(str.encode('y'))
 
             messages = get_all_messages(all_messages, True)
