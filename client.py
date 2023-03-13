@@ -116,7 +116,7 @@ def get_all_messages(all_messages, users=False):
 
     if users:
         all_users = []
-        for m in all_messages:
+        for m in all_messages[:]: # all_messages[:] because otherwise all_messages.remove(m) did not work.
             if not m.startswith("From"):
                 all_users.append(m)
                 all_messages.remove(m)
@@ -124,7 +124,7 @@ def get_all_messages(all_messages, users=False):
             
     else:
         msg = []
-        for m in all_messages:
+        for m in all_messages[:]: # all_messages[:] because otherwise all_messages.remove(m) did not work.
             if m.startswith("From"):
                 msg.append(m)
                 all_messages.remove(m)

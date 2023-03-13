@@ -8,7 +8,7 @@
 import socket
 import sys
 import platform
-from threading import Thread
+from threading import Thread, Lock
 from queue import Queue
 
 PORT = 8080
@@ -53,37 +53,44 @@ def send_client_list(conn, username):
     else:
         conn.send(str.encode(f"No Other users at the time\n"))
 
-
-def accept_client():
+def accept_client(conn, addr, client_list):
     """ Accept a new client and add it to the client list.
+
+        Args:
+            conn (socket): The socket of the client.
+            addr (tuple): The address of the client.
+            client_list (list): The list of all connected clients.
 
         Returns:
             tuple: The socket, address and username of the new client.
     """
-    conn, addr = server_socket.accept()
-
+    valid_user = False
     while True:
         data = conn.recv(2048)
         username = data.decode()
-
         names = []
         for cli in client_list:
             names.append(cli[0])
+        with lock:
+            if not names:
+                valid_user = True
+                break
         
-        if not names:
-            break
-        
-        if not (username in names):
-            break
+            if not (username in names):
+                valid_user = True
+                break
+
+    if not valid_user:      
         unvalid_user_msg = f"'{username}' is invalid"
         print(unvalid_user_msg)
-        continue
-    
-    msg = f"New connection: {addr[0]}:{addr[1]}"
-    print(msg)
-    conn.send(str.encode(f'Client "{username}" registered.\n'))
-    
-    return ((conn, addr, username))
+
+    if valid_user:
+        with lock:
+            client_list.append((username, conn))
+            all_clients.put((conn, addr, username))
+        msg = f"New connection: {addr[0]}:{addr[1]}"
+        print(msg)
+        conn.send(str.encode(f'Client "{username}" registered.\n'))
 
 
 def receive_message(connection, address, username, message_queue):
@@ -167,25 +174,25 @@ if __name__ == "__main__":
     server_socket.listen()
     print(f"Listening on {get_my_ip()}:{PORT}")
 
-    # Accept connections
+    lock = Lock()
     conn_cnt = 0
 
     client_list = []
     message_queue = Queue()
+    all_clients = Queue()
+
     try:
         while True:
-            try:
-                while True:
-                    conn, addr, username = accept_client()
+            try:                
+                conn_f, addr_f = server_socket.accept()
+                Thread(target=accept_client, args=(conn_f, addr_f, client_list), daemon=True).start()
+                conn_cnt += 1
 
-                    if conn or addr or username:
-                        break
-
-                client_list.append((username, conn))
+                conn, addr, username = all_clients.get()
 
                 Thread(target=receive_message, args=(conn, addr, username, message_queue), daemon=True).start()
                 Thread(target=send_message, args=(message_queue, ), daemon=True).start()
-                conn_cnt += 1
+                
                 print(f"{conn_cnt} connections")
             except socket.timeout:  # Windows (Python >= 3.10: TimeoutError)
                 continue
